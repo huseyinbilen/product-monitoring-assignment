@@ -6,9 +6,9 @@ const User = require("../models/User");
 
 exports.register = async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const user = new User(req.body); 
     user.password = await argon2.hash(user.password);
-    user.save();
+    await user.save();
     res.status(200).json({
       status: "success",
       desc: "User Created",
@@ -20,6 +20,7 @@ exports.register = async (req, res) => {
     });
   }
 };
+
 
 exports.login = async (req, res, next) => {
   try {
