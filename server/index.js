@@ -4,6 +4,7 @@ const app = express();
 
 const userRoute = require("./routes/userRoutes");
 const companyRoute = require("./routes/companyRoutes");
+const productRoute = require("./routes/productRoutes");
 
 // Connect DB
 mongoose.connect("mongodb://localhost:27017/product-monitoring-app").then(() => {
@@ -25,6 +26,7 @@ const PORT = 3001;
 // ROUTES
 app.use("/user", userRoute);
 app.use("/company", companyRoute);
+app.use("/product", productRoute);
 
 app.listen(PORT, () => {
     console.log("App Started on Port: ", PORT);
