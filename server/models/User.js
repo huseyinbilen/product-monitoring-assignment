@@ -22,12 +22,5 @@ const UserSchema = new Schema({
   }
 });
 
-UserSchema.pre('save', function(next) {
-  if (!this.createdAt) {
-    this.createdAt = new Date();
-  }
-  next();
-});
-
 const User = mongoose.model('User', UserSchema);
 module.exports = User;

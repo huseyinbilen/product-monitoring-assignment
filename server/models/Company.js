@@ -26,12 +26,5 @@ const CompanySchema = new Schema({
   }
 });
 
-CompanySchema.pre('save', function(next) {
-  if (!this.createdAt) {
-    this.createdAt = new Date();
-  }
-  next();
-});
-
 const Company = mongoose.model('Company', CompanySchema);
 module.exports = Company;
