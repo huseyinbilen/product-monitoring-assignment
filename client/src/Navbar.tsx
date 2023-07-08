@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 
 const { SubMenu } = Menu;
 
-function Navbar(): JSX.Element {
+interface NavbarProps {
+  onLogout: () => void;
+}
+
+function Navbar({ onLogout }: NavbarProps): JSX.Element {
   const navigate = useNavigate();
 
   const handleMenuClick = (path: string): void => {
@@ -15,6 +19,8 @@ function Navbar(): JSX.Element {
   const handleLogout = (): void => {
     // Logout işlemleri burada gerçekleştirilebilir
     console.log('Logout');
+    navigate('/');
+    onLogout();
   };
 
   return (

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Tabs } from 'antd';
 // import 'antd/dist/antd.css';
 
 const { TabPane } = Tabs;
 
-function Login(): JSX.Element {
+function Login({ onLogin }: { onLogin: () => void }): JSX.Element {
   const [activeTab, setActiveTab] = useState('login');
+  const navigate = useNavigate();
 
   const handleTabChange = (key: string): void => {
     setActiveTab(key);
@@ -13,10 +15,50 @@ function Login(): JSX.Element {
 
   const handleLogin = (values: any): void => {
     console.log('Login:', values);
+    
+    let email = values.email;
+    let password = values.password;
+
+    const requestOptions: RequestInit = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: password }),
+    };
+    fetch("http://localhost:3001/user/login", requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        // Token storage
+        document.cookie = `token=${data.data.token}; expires=${new Date(
+          new Date().setFullYear(new Date().getFullYear() + 1)
+        )}; path=/`;      
+      onLogin();
+      navigate("/home");
+      });
   };
 
   const handleRegister = (values: any): void => {
     console.log('Register:', values);
+    let name: string = values.name;
+    let email: string = values.email;
+    let password: string = values.password;
+
+    const requestOptions: RequestInit = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        password: password,
+      }),
+    };
+    
+    fetch("http://localhost:3001/user/register", requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        alert(data.desc + "\nPlease Login!");
+        console.log(data);
+      });
   };
 
   return (

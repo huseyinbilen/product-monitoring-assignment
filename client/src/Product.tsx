@@ -84,7 +84,7 @@ function ProductTable(): JSX.Element {
 
   return (
     <div>
-      <Navbar></Navbar>
+      {/* <Navbar></Navbar> */}
       <div style={{ padding: "20px" }}>
         <Button type="primary" onClick={showModal}>
           Yeni Ürün Ekle
