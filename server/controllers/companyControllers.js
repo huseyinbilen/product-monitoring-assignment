@@ -7,6 +7,7 @@ exports.addCompany = async (req, res) => {
     res.status(200).json({
       status: "success",
       desc: "Company Created",
+      company
     });
   } catch (error) {
     res.status(400).json({
