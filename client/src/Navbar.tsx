@@ -26,16 +26,16 @@ function Navbar({ onLogout }: NavbarProps): JSX.Element {
   return (
     <Menu mode="horizontal">
       <Menu.Item key="home" icon={<HomeOutlined />} onClick={() => handleMenuClick('/home')}>
-        Ana Sayfa
+        Home Page
       </Menu.Item>
       <Menu.Item key="companies" icon={<TeamOutlined />} onClick={() => handleMenuClick('/companies')}>
-        Şirketler
+        Companies
       </Menu.Item>
       <Menu.Item key="products" icon={<ShoppingCartOutlined />} onClick={() => handleMenuClick('/products')}>
-        Ürünler
+        Products
       </Menu.Item>
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ marginLeft: 'auto' }}>
-        Çıkış Yap
+        Logout
       </Menu.Item>
     </Menu>
   );

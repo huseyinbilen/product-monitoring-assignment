@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Input } from "antd";
 import Navbar from "./Navbar";
 
 interface Company {
-  id: string;
-  name: string;
-  legalNumber: string;
-  country: string;
+  _id: string;
+  companyName: string;
+  companyLegalNumber: string;
+  incorporationCountry: string;
   website: string;
 }
 
@@ -15,6 +15,97 @@ function CompanyTable(): JSX.Element {
   const [visible, setVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/company/get-companies", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        }
+      });
+      const data = await response.json();
+      setCompanies(data.companies);
+      console.log(data)
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+    }
+  };
+
+  const addCompany = async (company: Company) => {
+    try {
+      console.log(company);
+      const response = await fetch("http://localhost:3001/company/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        },
+        body: JSON.stringify({
+          companyName: company.companyName,
+          companyLegalNumber: company.companyLegalNumber,
+          incorporationCountry: company.incorporationCountry,
+          website: company.website
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+      setCompanies([...companies, data.company]);
+      // fetchCompanies();
+    } catch (error) {
+      console.error("Failed to add company:", error);
+    }
+  };
+
+  const deleteCompany = async (id: string) => {
+    try {
+      console.log(id);
+      await fetch(`http://localhost:3001/company/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        },
+        body: JSON.stringify({
+          _id: id
+        }),
+      });
+      const updatedCompanies = companies.filter((company) => company._id !== id);
+      setCompanies(updatedCompanies);
+    } catch (error) {
+      console.error("Failed to delete company:", error);
+    }
+  };
+
+  const updateCompany = async (company: Company) => {
+    try {
+      const response = await fetch(`http://localhost:3001/company/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        },
+        body: JSON.stringify({
+          _id: company._id,
+          companyName: company.companyName,
+          companyLegalNumber: company.companyLegalNumber,
+          incorporationCountry: company.incorporationCountry,
+          website: company.website
+        }),
+      });
+      const data = await response.json();
+      const updatedCompanies = companies.map((c) => (c._id === data.id ? data : c));
+      setCompanies(updatedCompanies);
+      fetchCompanies();
+    } catch (error) {
+      console.error("Failed to update company:", error);
+    }
+  };
 
   const showModal = (): void => {
     setVisible(true);
@@ -28,16 +119,14 @@ function CompanyTable(): JSX.Element {
   const handleSubmit = (): void => {
     form.validateFields().then((values) => {
       if (editingCompany) {
-        const updatedCompanies = companies.map((company) =>
-          company.id === editingCompany.id ? { ...company, ...values } : company
-        );
-        setCompanies(updatedCompanies);
+        const updatedCompany: Company = { ...editingCompany, ...values };
+        updateCompany(updatedCompany);
       } else {
         const newCompany: Company = {
           id: String(companies.length + 1),
           ...values,
         };
-        setCompanies([...companies, newCompany]);
+        addCompany(newCompany);
       }
       form.resetFields();
       setVisible(false);
@@ -52,30 +141,29 @@ function CompanyTable(): JSX.Element {
   };
 
   const handleDelete = (id: string): void => {
-    const updatedCompanies = companies.filter((company) => company.id !== id);
-    setCompanies(updatedCompanies);
+    deleteCompany(id);
   };
 
   const columns = [
-    { title: "Şirket Adı", dataIndex: "name", key: "name" },
+    { title: "Company Name", dataIndex: "companyName", key: "companyName" },
     {
-      title: "Şirket Yasal Numarası",
-      dataIndex: "legalNumber",
-      key: "legalNumber",
+      title: "Legal Number",
+      dataIndex: "companyLegalNumber",
+      key: "companyLegalNumber",
     },
-    { title: "Kuruluş Ülkesi", dataIndex: "country", key: "country" },
-    { title: "Web Sitesi", dataIndex: "website", key: "website" },
+    { title: "Country", dataIndex: "incorporationCountry", key: "incorporationCountry" },
+    { title: "Website", dataIndex: "website", key: "website" },
     {
-      title: "İşlemler",
+      title: "Actions",
       dataIndex: "actions",
       key: "actions",
       render: (_: any, record: Company) => (
         <>
           <Button type="link" onClick={() => handleEdit(record)}>
-            Düzenle
+            Edit
           </Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>
-            Sil
+          <Button type="link" danger onClick={() => handleDelete(record._id)}>
+            Delete
           </Button>
         </>
       ),
@@ -84,15 +172,14 @@ function CompanyTable(): JSX.Element {
 
   return (
     <div>
-      {/* <Navbar></Navbar> */}
       <div style={{ padding: "20px" }}>
         <Button type="primary" onClick={showModal}>
-          Yeni Şirket Ekle
+          Add New Company
         </Button>
         <Table dataSource={companies} columns={columns} rowKey="id" />
 
         <Modal
-          title={editingCompany ? "Şirket Düzenle" : "Yeni Şirket Ekle"}
+          title={editingCompany ? "Edit Company" : "Add New Company"}
           visible={visible}
           onCancel={handleCancel}
           onOk={handleSubmit}
@@ -100,32 +187,32 @@ function CompanyTable(): JSX.Element {
         >
           <Form form={form} layout="vertical">
             <Form.Item
-              label="Şirket Adı"
-              name="name"
-              rules={[{ required: true, message: "Şirket adını girin" }]}
+              label="Company Name"
+              name="companyName"
+              rules={[{ required: true, message: "Please enter the company name" }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              label="Şirket Yasal Numarası"
-              name="legalNumber"
+              label="Legal Number"
+              name="companyLegalNumber"
               rules={[
-                { required: true, message: "Şirket yasal numarasını girin" },
+                { required: true, message: "Please enter the legal number" },
               ]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              label="Kuruluş Ülkesi"
-              name="country"
-              rules={[{ required: true, message: "Kuruluş ülkesini girin" }]}
+              label="Country"
+              name="incorporationCountry"
+              rules={[{ required: true, message: "Please enter the country" }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              label="Web Sitesi"
+              label="Website"
               name="website"
-              rules={[{ required: true, message: "Web sitesini girin" }]}
+              rules={[{ required: true, message: "Please enter the website" }]}
             >
               <Input />
             </Form.Item>
