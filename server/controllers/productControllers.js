@@ -7,6 +7,7 @@ exports.addProduct = async (req, res) => {
     res.status(200).json({
       status: "success",
       desc: "Product Created",
+      product
     });
   } catch (error) {
     res.status(400).json({
@@ -79,7 +80,7 @@ exports.getProduct = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    let products = await Product.find();
+    let products = await Product.find().populate("company");
     res.status(200).json({
       products,
     });
