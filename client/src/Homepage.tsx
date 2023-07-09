@@ -4,78 +4,116 @@ import Navbar from "./Navbar";
 
 const { Title } = Typography;
 
-interface Company {
-  id: number;
-  name: string;
-}
-
 interface Product {
-  id: number;
-  name: string;
-  price: number;
+  _id: string;
+  productName: string;
+  productCategory: string;
+  productAmount: number;
+  amountUnit: string;
+  company: Company;
+  createdAt: Date;
 }
 
-function generateRandomCompanies(): Company[] {
-  const companies: Company[] = [];
-  for (let i = 1; i <= 10; i++) {
-    companies.push({ id: i, name: `Company ${i}` });
-  }
-  return companies;
-}
-
-function generateRandomProducts(): Product[] {
-  const products: Product[] = [];
-  for (let i = 1; i <= 10; i++) {
-    products.push({
-      id: i,
-      name: `Product ${i}`,
-      price: Math.floor(Math.random() * 1000) + 1,
-    });
-  }
-  return products;
+interface Company {
+  _id: string;
+  companyName: string;
+  companyLegalNumber: string;
+  incorporationCountry: string;
+  website: string;
+  createdAt: Date;
 }
 
 function Homepage(): JSX.Element {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [latestCompanies, setLatestCompanies] = useState<Company[]>([]);
+  const [latestProducts, setLatestProducts] = useState<Product[]>([]);
+  const [expensiveProducts, setExpensiveProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const generatedCompanies = generateRandomCompanies();
-    const generatedProducts = generateRandomProducts();
-    setCompanies(generatedCompanies);
-    setProducts(generatedProducts);
+    fetchCompanies();
+    fetchProducts();
   }, []);
 
-  const latestCompanies = companies.slice(-3);
-  const expensiveProducts = products
-    .sort((a, b) => b.price - a.price)
-    .slice(0, 3);
-  const latestProducts = products.slice(-3);
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/company/get-companies", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        }
+      });
+      const data = await response.json();
+      setCompanies(data.companies);
+
+      const sortedCompanies = data.companies.sort(
+        (a: Company, b: Company) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      const latestThreeCompanies = sortedCompanies.slice(0, 3);
+      setLatestCompanies(latestThreeCompanies);
+
+      console.log(data)
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/product/get-products", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + document.cookie.split("=")[1],
+        },
+      });
+      const data = await response.json();
+      setProducts(data.products);
+  
+      // productAmount alanına göre ürünleri sırala ve en yüksek 3 ürünü ayarla
+      const sortedProducts = data.products.sort(
+        (a: Product, b: Product) => b.productAmount - a.productAmount
+      );
+      const expensiveThreeProducts = sortedProducts.slice(0, 3);
+      setExpensiveProducts(expensiveThreeProducts);
+  
+      // createdAt alanına göre ürünleri sırala ve en yeni 3 ürünü ayarla
+      const latestThreeProducts = sortedProducts.slice(0, 3);
+      setLatestProducts(latestThreeProducts);
+  
+      console.log(data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    }
+  };
+  
+
 
   return (
     <div>
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "40px" }}>
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Title level={4}>Son Eklenen 3 Şirket</Title>
+            <Title level={4}>Recently Added Companies</Title>
             {latestCompanies.map((company) => (
-              <Card key={company.id}>{company.name}</Card>
+              <Card key={company._id}>{company.companyName}</Card>
             ))}
           </Col>
           <Col span={12}>
-            <Title level={4}>En Pahalı 3 Ürün</Title>
+            <Title level={4}>Most Expensive Products</Title>
             {expensiveProducts.map((product) => (
-              <Card key={product.id}>
-                {product.name} - ${product.price}
+              <Card key={product._id}>
+                {product.productName} - {product.productAmount} {product.amountUnit}
               </Card>
             ))}
           </Col>
         </Row>
         <Row gutter={[16, 16]}>
           <Col span={24}>
-            <Title level={4}>En Son Eklenen 3 Ürün</Title>
+            <Title level={4}>Recently Added Products</Title>
             {latestProducts.map((product) => (
-              <Card key={product.id}>{product.name}</Card>
+              <Card key={product._id}>{product.productName}</Card>
             ))}
           </Col>
         </Row>
